@@ -1,0 +1,13 @@
+{
+  "run_id": "demo-run-001",
+  "pipeline": "customer-churn-training",
+  "dataset": "synthetic_customer_events_v3",
+  "source_revision": "demo-revision-001",
+  "stages": [
+    {"name": "ingest", "status": "passed", "metrics": {"records_in": 120000}},
+    {"name": "validate", "status": "passed", "metrics": {"schema_errors": 0, "missing_required_values": 0}},
+    {"name": "features", "status": "passed", "metrics": {"rows_out": 119800, "feature_columns": 24}},
+    {"name": "train", "status": "passed", "metrics": {"epochs": 12, "best_validation_loss": 0.214}},
+    {"name": "evaluate", "status": "passed", "metrics": {"auc": 0.79, "target_auc": 0.8, "test_rows": 24000}}
+  ]
+}
