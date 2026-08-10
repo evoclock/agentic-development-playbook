@@ -1,0 +1,19 @@
+# Local recording material. Do not publish.
+recording/
+recording-notes/
+*.mp4
+*.mov
+*.m4v
+*.wav
+*.m4a
+
+# Local tools and generated state.
+.venv/
+__pycache__/
+.pytest_cache/
+.DS_Store
+
+# Local credentials and environment files.
+.env
+.env.*
+!.env.example
