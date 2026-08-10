@@ -17,3 +17,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Generated synthetic pipeline evidence.
+synthetic-project/runs/

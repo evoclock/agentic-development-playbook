@@ -1,36 +1,123 @@
-# Synthetic pipeline health demo
+# Executable synthetic pipeline
 
-This project reports the health of one synthetic batch-training run.
-It uses only the Python standard library. It contains no real data.
+This directory contains a small, public-safe data-science operations process.
+It runs locally with the Python standard library. It generates synthetic
+records, validates them, creates features, fits a deterministic baseline model,
+calculates an evaluation metric, and writes run evidence.
 
-## Run it
+It does not use real data, a model service, a network, or a package install.
+The name `synthetic-churn-training` is a scenario label only.
 
-From this directory:
+## Process flow
 
-```bash
-python3 src/pipeline_ops/health_report.py fixtures/run_manifest.json
+```text
+seed + scenario
+      |
+      v
+  ingest: generate records
+      |
+      v
+  validate: check the record contract
+      |
+      v
+  features: filter a time window and derive three features
+      |
+      v
+  train: fit a mean-difference linear baseline
+      |
+      v
+  evaluate: score the test split and calculate rank-based AUC
+      |
+      v
+  evidence: manifest, metrics, provenance, failure log, health report
 ```
 
-The baseline fixture has five passed stages and one evaluation warning.
-The AUC is `0.790`; the default threshold is `0.800`.
-A warning returns exit code `1`.
+The model is intentionally simple. Its purpose is to create reproducible
+operational evidence, not to claim useful predictive performance.
 
-Expected output is stored in [`expected-output/baseline.txt`](expected-output/baseline.txt).
-The JSON form is available with `--format json`.
+## Run the real process
 
-## Test it
+Run from `synthetic-project/`:
+
+```bash
+python3 scripts/run_pipeline.py --scenario healthy --output-dir runs/demo-healthy
+```
+
+The command generates 400 records with seed `17`. It writes nine files under
+the selected output directory. The `runs/` directory is ignored by Git because
+it contains generated local evidence.
+
+The command prints a health report and returns an exit code:
+
+- `0` — all configured checks pass;
+- `1` — a review warning is present;
+- `2` — a required check failed or input is invalid.
+
+## Scenarios
+
+| Scenario | Process change | Current result |
+|---|---|---|
+| `healthy` | 30-day feature window and normal scores | `HEALTHY`, exit `0` |
+| `evaluation-warning` | Test scores are inverted | `WARNING`, exit `1` |
+| `row-loss` | 15-day feature window keeps only 196 of 400 rows | `WARNING`, exit `1` |
+| `schema-failure` | One generated record loses `event_count` | `FAILED`, exit `2` |
+
+The `row-loss` result is deliberate. The process records the loss and the
+current health report now checks it. The change is specified in
+[`DEMO-TICKET.md`](DEMO-TICKET.md) and is the correction demonstrated by the
+recorded workflow.
+
+## Evidence artifacts
+
+A successful run writes:
+
+| File | Purpose |
+|---|---|
+| `raw_records.jsonl` | Generated input records |
+| `validation.json` | Record-contract checks and errors |
+| `features.jsonl` | Rows retained for modelling and derived features |
+| `model.json` | Deterministic baseline weights and training counts |
+| `evaluation.json` | Test counts, calculated AUC, threshold, score mode |
+| `provenance.json` | Seed, scenario, source revision, and generator version |
+| `run_manifest.json` | Stage order, statuses, metrics, and artifact references |
+| `failure_log.jsonl` | One evidence record per pipeline failure; empty on success |
+| `health_report.json` | Structured status and check results |
+
+The schema-failure scenario stops after validation. It writes six files and a
+failure record, but it does not write feature, model, or evaluation artifacts.
+
+## Inspect the evidence
+
+For example:
+
+```bash
+python3 -m json.tool runs/demo-healthy/run_manifest.json
+python3 -m json.tool runs/demo-healthy/provenance.json
+cat runs/demo-healthy/failure_log.jsonl
+```
+
+Use the runbook in [`runbooks/pipeline-triage.md`](runbooks/pipeline-triage.md)
+when deciding what the evidence supports.
+
+## Run tests
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-The tests cover manifest validation, status calculation, text output, and
-failure/warning behaviour.
+The tests cover deterministic generation, validation failures, feature-window
+retention, model calculation, AUC warnings, artifact creation, early stop on a
+schema failure, and the current row-loss gap.
 
 ## Recorded task
 
-[`DEMO-TICKET.md`](DEMO-TICKET.md) asks for a feature-row retention check.
-The expected post-change report is in
-[`expected-output/after-row-retention-check.txt`](expected-output/after-row-retention-check.txt).
+[`DEMO-TICKET.md`](DEMO-TICKET.md) is intentionally small enough for a complete
+agentic walkthrough. The agent must add the missing retention check without
+changing the runner, raw records, or MCP boundary.
 
-The triage procedure is in [`runbooks/pipeline-triage.md`](runbooks/pipeline-triage.md).
+Expected outputs are kept in [`expected-output/`](expected-output/):
+
+- `baseline.txt` — healthy run;
+- `evaluation-warning.txt` — computed evaluation warning;
+- `after-row-retention-check.txt` — row-loss warning after the correction;
+- `schema-failure.txt` — validation stop and failure status.

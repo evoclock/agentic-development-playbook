@@ -9,6 +9,7 @@ from typing import Any
 
 DEFAULT_MIN_AUC = 0.80
 DEFAULT_MAX_SCHEMA_ERRORS = 0
+DEFAULT_MIN_ROW_RETENTION = 0.99
 EXIT_CODES = {"healthy": 0, "warning": 1, "failed": 2}
 VALID_STATUSES = {"passed", "warning", "failed"}
 
@@ -49,6 +50,7 @@ def _number(value: Any, label: str) -> float:
 def evaluate_manifest(
     manifest: dict[str, Any], *, min_auc: float = DEFAULT_MIN_AUC,
     max_schema_errors: int = DEFAULT_MAX_SCHEMA_ERRORS,
+    min_row_retention: float = DEFAULT_MIN_ROW_RETENTION,
 ) -> dict[str, Any]:
     """Evaluate checks without changing the input manifest."""
     for field in ("run_id", "pipeline", "dataset", "stages"):
@@ -57,6 +59,7 @@ def evaluate_manifest(
     checks: list[dict[str, str]] = []
     failed = False
     warning = False
+    records_in: float | None = None
     for stage in manifest["stages"]:
         name = str(stage["name"])
         status = str(stage["status"])
@@ -68,12 +71,24 @@ def evaluate_manifest(
         metrics = stage.get("metrics", {})
         if not isinstance(metrics, dict):
             raise ValueError(f"Metrics for stage {name} must be an object")
+        if name == "ingest" and "records_in" in metrics:
+            records_in = _number(metrics["records_in"], "ingest.records_in")
+            if records_in <= 0:
+                raise ValueError("ingest.records_in must be greater than zero")
         if "schema_errors" in metrics:
             errors = _number(metrics["schema_errors"], f"{name}.schema_errors")
             check_status = "pass" if errors <= max_schema_errors else "failed"
             checks.append({"name": f"{name}.schema_errors", "status": check_status,
                            "detail": f"{errors:g} <= {max_schema_errors:g}"})
             failed = failed or check_status == "failed"
+        if name == "features" and records_in is not None and "rows_out" in metrics:
+            rows_out = _number(metrics["rows_out"], "features.rows_out")
+            retention = rows_out / records_in
+            check_status = "pass" if retention >= min_row_retention else "warning"
+            operator = ">=" if check_status == "pass" else "<"
+            checks.append({"name": "features.row_retention", "status": check_status,
+                           "detail": f"{retention:.3f} {operator} {min_row_retention:.3f}"})
+            warning = warning or check_status == "warning"
         if "auc" in metrics:
             auc = _number(metrics["auc"], f"{name}.auc")
             check_status = "pass" if auc >= min_auc else "warning"
@@ -119,10 +134,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--min-auc", type=float, default=DEFAULT_MIN_AUC)
     parser.add_argument("--max-schema-errors", type=int, default=DEFAULT_MAX_SCHEMA_ERRORS)
+    parser.add_argument("--min-row-retention", type=float, default=DEFAULT_MIN_ROW_RETENTION)
     args = parser.parse_args(argv)
     try:
         report = evaluate_manifest(load_manifest(args.manifest), min_auc=args.min_auc,
-                                   max_schema_errors=args.max_schema_errors)
+                                   max_schema_errors=args.max_schema_errors,
+                                   min_row_retention=args.min_row_retention)
     except ValueError as exc:
         print(f"Input error: {exc}", file=sys.stderr)
         return 2

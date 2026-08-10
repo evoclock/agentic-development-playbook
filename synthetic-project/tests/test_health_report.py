@@ -19,7 +19,22 @@ class HealthReportTests(unittest.TestCase):
         report = evaluate_manifest(load_manifest(self.path))
         self.assertEqual(report["status"], "warning")
         self.assertEqual(report["stages"], {"total": 5, "passed": 5, "warning": 0, "failed": 0})
-        self.assertIn("WARN evaluate.auc: 0.790 < 0.800", render_text(report))
+        text = render_text(report)
+        self.assertIn("PASS features.row_retention: 0.998 >= 0.990", text)
+        self.assertIn("WARN evaluate.auc: 0.790 < 0.800", text)
+
+    def test_row_retention_warning_changes_overall_status(self):
+        manifest = json.loads(self.path.read_text(encoding="utf-8"))
+        manifest["stages"][2]["metrics"]["rows_out"] = 100000
+        report = evaluate_manifest(manifest)
+        self.assertEqual(report["status"], "warning")
+        self.assertIn("WARN features.row_retention: 0.833 < 0.990", render_text(report))
+
+    def test_zero_input_rows_are_rejected(self):
+        manifest = json.loads(self.path.read_text(encoding="utf-8"))
+        manifest["stages"][0]["metrics"]["records_in"] = 0
+        with self.assertRaisesRegex(ValueError, "greater than zero"):
+            evaluate_manifest(manifest)
 
     def test_schema_error_fails(self):
         manifest = json.loads(self.path.read_text(encoding="utf-8"))

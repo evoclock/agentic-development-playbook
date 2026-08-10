@@ -1,15 +1,16 @@
-Run: demo-run-001
-Pipeline: customer-churn-training
-Dataset: synthetic_customer_events_v3
+Run: demo-row-loss-17
+Pipeline: synthetic-churn-training
+Dataset: synthetic_customer_events_v1
 Overall status: WARNING
 Stages: 5 total | 5 passed | 0 warning | 0 failed
 Checks:
   PASS stage.ingest: stage status is passed
   PASS stage.validate: stage status is passed
+  PASS validate.schema_errors: 0 <= 0
   PASS stage.features: stage status is passed
+  WARN features.row_retention: 0.490 < 0.990
   PASS stage.train: stage status is passed
   PASS stage.evaluate: stage status is passed
-  PASS validate.schema_errors: 0 <= 0
-  PASS features.row_retention: 0.998 >= 0.990
-  WARN evaluate.auc: 0.790 < 0.800
+  PASS evaluate.auc: 0.914 >= 0.800
 Recommendation: Review warning checks before promotion.
+Artifacts: 9 files in synthetic-project/runs/expected-row-loss
