@@ -1,0 +1,17 @@
+Run: demo-healthy-17
+Pipeline: synthetic-churn-training
+Dataset: synthetic_customer_events_v1
+Overall status: HEALTHY
+Stages: 5 total | 5 passed | 0 warning | 0 failed
+Checks:
+  PASS stage.ingest: stage status is passed
+  PASS stage.validate: stage status is passed
+  PASS validate.schema_errors: 0 <= 0
+  PASS stage.features: stage status is passed
+  PASS features.row_retention: 1.000 >= 0.990
+  PASS stage.train: stage status is passed
+  PASS stage.evaluate: stage status is passed
+  PASS evaluate.test_rows: 100 >= 50
+  PASS evaluate.auc: 0.828 >= 0.800
+Recommendation: Run passed the configured checks.
+Artifacts: 9 files in synthetic-project/runs/accept-healthy

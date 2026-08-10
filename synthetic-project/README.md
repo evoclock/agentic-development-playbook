@@ -63,9 +63,9 @@ The command prints a health report and returns an exit code:
 | `schema-failure` | One generated record loses `event_count` | `FAILED`, exit `2` |
 
 The `row-loss` result is deliberate. The process records the loss and the
-current health report now checks it. The change is specified in
-[`DEMO-TICKET.md`](DEMO-TICKET.md) and is the correction demonstrated by the
-recorded workflow.
+health report checks it. The retention check is foundation evidence for the
+recorded workflow. The current demo task adds a minimum evaluation sample-size
+check.
 
 ## Evidence artifacts
 
@@ -112,12 +112,26 @@ schema failure, and the current row-loss gap.
 ## Recorded task
 
 [`DEMO-TICKET.md`](DEMO-TICKET.md) is intentionally small enough for a complete
-agentic walkthrough. The agent must add the missing retention check without
-changing the runner, raw records, or MCP boundary.
+agentic walkthrough. The agent must add a minimum evaluation sample-size check
+without changing the runner, generated records, or control-plane boundaries.
 
 Expected outputs are kept in [`expected-output/`](expected-output/):
 
 - `baseline.txt` — healthy run;
 - `evaluation-warning.txt` — computed evaluation warning;
-- `after-row-retention-check.txt` — row-loss warning after the correction;
+- `after-row-retention-check.txt` — foundation retention warning;
+- `after-min-test-rows-check.txt` — expected output for the current task;
 - `schema-failure.txt` — validation stop and failure status.
+
+## Optional context diagnostic
+
+The repository includes a standalone diagnostic for a launcher that can supply
+`AGENT_CONTEXT_PERCENT` or a `--percent` value:
+
+```bash
+python3 scripts/copilot_context_pressure.py --percent 60
+```
+
+It is not an active Copilot hook because Copilot `sessionStart` does not expose
+reliable context usage telemetry. See [`docs/copilot-hooks.md`](../docs/copilot-hooks.md)
+for the hook boundary and verification limits.

@@ -18,7 +18,8 @@ This repository is public. Treat every tracked file as public material.
 - internal procedures or unpublished work information;
 - commercial product details that are not already public;
 - claims of DfE endorsement or official status;
-- local recording files or unedited session output.
+- local recording files or unedited session output;
+- generated pipeline runs under `synthetic-project/runs/`.
 
 Use placeholders such as `YOUR_TOKEN` and `https://example.invalid` when an
 example needs them.

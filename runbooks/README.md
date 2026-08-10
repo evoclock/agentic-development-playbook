@@ -2,7 +2,18 @@
 
 Runbooks provide the detailed path behind the recorded walkthrough.
 
-## Planned runbooks
+## Available now
+
+- [`synthetic-project/README.md`](../synthetic-project/README.md) — run the
+  executable process and inspect its artifacts;
+- [`synthetic-project/runbooks/pipeline-triage.md`](../synthetic-project/runbooks/pipeline-triage.md)
+  — triage stages, metrics, provenance, and failures;
+- [`docs/copilot-hooks.md`](../docs/copilot-hooks.md) — active hook boundaries
+  and context-pressure limits;
+- [`docs/publication-policy.md`](../docs/publication-policy.md) — public review
+  rules.
+
+## Planned deep-dive runbooks
 
 - `01-copilot-cli.md` — install, sign in, start a session, and use safe defaults;
 - `02-project-context.md` — add repository instructions and acceptance checks;
@@ -13,11 +24,12 @@ Runbooks provide the detailed path behind the recorded walkthrough.
 - `07-model-efficiency.md` — route work and control context and token use;
 - `08-publication-checks.md` — review public material before publishing.
 
-The files are added as the walkthrough develops.
+These deep-dive files are not yet tracked. The available material is the
+current source of truth.
 
 ## Safe default
 
-Use a clean clone of the synthetic project.
+Use a clean clone of the repository.
 
 Start with a supervised session. Review every proposed command and every diff.
 Do not use production data.

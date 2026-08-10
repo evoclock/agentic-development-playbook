@@ -1,37 +1,31 @@
-# Demo ticket: detect silent feature-row loss
+# Demo ticket: guard small evaluation samples
 
 ## Problem
 
-This ticket is the bounded correction applied after the foundation commit
-`fe30ddf`. The executable pipeline can complete the feature stage while
-retaining too few rows. In the `row-loss` scenario:
+An AUC value is less useful when the evaluation sample is too small. The
+pipeline currently checks AUC, schema errors, and feature-row retention, but it
+does not check the number of test rows before using the AUC result.
 
-```text
-records_in = 400
-rows_out   = 196
-retention  = 196 / 400 = 0.490
-```
-
-The current health report still returns `HEALTHY` because it checks stage status,
-schema errors, and AUC, but not row retention.
+The healthy scenario has `100` test rows. The new check will make that evidence
+explicit and will also support a warning test with a smaller in-memory manifest.
 
 ## Change
 
-Add a deterministic feature-row retention check to
+Add a minimum evaluation sample-size check to
 `src/pipeline_ops/health_report.py`.
 
 Requirements:
 
-- compare `features.metrics.rows_out` with `ingest.metrics.records_in`;
-- add `--min-row-retention`, default `0.99`;
-- report `PASS` when the ratio meets the threshold;
-- report `WARN` when the ratio is below the threshold;
-- make a retention warning change the overall status to `WARNING`;
-- keep the existing AUC and schema checks;
-- keep the text and JSON output formats stable;
+- read `evaluate.metrics.test_rows`;
+- add `--min-test-rows`, default `50`;
+- report `PASS` when test rows meet the threshold;
+- report `WARN` when test rows are below the threshold;
+- make the warning change the overall status to `WARNING`;
+- keep the schema, row-retention, and AUC checks;
+- keep text and JSON output stable;
 - add pass and warning tests;
 - use no new dependency;
-- do not change the runner, generated records, MCP server, or hook.
+- do not change the runner, generated records, MCP server, or hooks.
 
 ## Acceptance checks
 
@@ -40,19 +34,21 @@ Run from `synthetic-project/`:
 ```bash
 python3 -m unittest discover -s tests -v
 python3 scripts/run_pipeline.py --scenario healthy --output-dir runs/accept-healthy
-python3 scripts/run_pipeline.py --scenario row-loss --output-dir runs/accept-row-loss
-python3 scripts/run_pipeline.py --scenario row-loss --output-dir runs/accept-row-loss --format json
+python3 scripts/run_pipeline.py --scenario evaluation-warning --output-dir runs/accept-evaluation-warning
 ```
 
-The healthy command must return `0`. The row-loss command must return `1` and
-include:
+The healthy command must return `0` and, after the change, include:
 
 ```text
-WARN features.row_retention: 0.490 < 0.990
+PASS evaluate.test_rows: 100 >= 50
 ```
 
-The AUC check must remain visible. The JSON report must contain a check named
-`features.row_retention` with status `warning`.
+Add an in-memory test with `test_rows = 20`. It must include:
 
-The expected post-change output is in
-`expected-output/after-row-retention-check.txt`.
+```text
+WARN evaluate.test_rows: 20 < 50
+```
+
+The existing AUC, row-retention, and schema checks must remain visible.
+The expected post-change healthy output is in
+`expected-output/after-min-test-rows-check.txt`.

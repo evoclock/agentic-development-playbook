@@ -74,8 +74,8 @@ rows_out = 196
 retention = 196 / 400 = 0.490
 ```
 
-This is the problem selected for the Copilot task. A passed stage status does
-not prove that the stage preserved enough rows.
+This is a foundation quality check. A passed stage status does not prove that
+the stage preserved enough rows.
 
 ### Train
 
@@ -95,6 +95,19 @@ auc target  = 0.800000
 
 The evaluation-warning scenario inverts the test scores. Its calculated AUC is
 `0.172458`, so the report returns `WARNING` and exit code `1`.
+
+The current demo task adds a minimum test-row check. The healthy run has:
+
+```text
+test_rows  = 100
+minimum    = 50
+```
+
+The task must also cover a smaller in-memory manifest and report:
+
+```text
+WARN evaluate.test_rows: 20 < 50
+```
 
 ## Health decision
 
@@ -127,10 +140,11 @@ file.
 
 ## Recorded change
 
-The correction adds the feature-row retention check. The row-loss run reports:
+The current ticket adds the minimum evaluation sample-size check. The healthy
+run must report:
 
 ```text
-WARN features.row_retention: 0.490 < 0.990
+PASS evaluate.test_rows: 100 >= 50
 ```
 
 Use only evidence in the generated artifacts. Do not invent a cause for a
