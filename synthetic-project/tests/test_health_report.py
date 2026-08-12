@@ -46,6 +46,21 @@ class HealthReportTests(unittest.TestCase):
         manifest["stages"][-1]["metrics"]["auc"] = 0.83
         self.assertEqual(evaluate_manifest(manifest)["status"], "healthy")
 
+    def test_test_rows_pass_at_default_threshold(self):
+        manifest = json.loads(self.path.read_text(encoding="utf-8"))
+        manifest["stages"][-1]["metrics"]["auc"] = 0.83
+        manifest["stages"][-1]["metrics"]["test_rows"] = 50
+        report = evaluate_manifest(manifest)
+        self.assertIn("PASS evaluate.test_rows: 50 >= 50", render_text(report))
+        self.assertEqual(report["status"], "healthy")
+
+    def test_test_rows_warning_changes_overall_status(self):
+        manifest = json.loads(self.path.read_text(encoding="utf-8"))
+        manifest["stages"][-1]["metrics"]["test_rows"] = 20
+        report = evaluate_manifest(manifest)
+        self.assertEqual(report["status"], "warning")
+        self.assertIn("WARN evaluate.test_rows: 20 < 50", render_text(report))
+
     def test_missing_manifest_field_is_rejected(self):
         manifest = json.loads(self.path.read_text(encoding="utf-8"))
         del manifest["dataset"]

@@ -4,8 +4,8 @@
     "sessionStart": [
       {
         "type": "command",
-        "bash": "python3 synthetic-project/scripts/copilot_session_state.py",
-        "powershell": "python synthetic-project/scripts/copilot_session_state.py",
+        "bash": "python3 .github/hooks/copilot_session_state.py",
+        "powershell": "python .github/hooks/copilot_session_state.py",
         "cwd": ".",
         "timeoutSec": 10
       }

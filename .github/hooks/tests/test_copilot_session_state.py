@@ -7,8 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
+ROOT = Path(__file__).resolve().parents[3]
+HOOK_ROOT = ROOT / ".github" / "hooks"
+sys.path.insert(0, str(HOOK_ROOT))
 
 from copilot_session_state import hook_output, render_context, review_repo  # noqa: E402
 
@@ -44,6 +45,15 @@ class CopilotSessionStateTests(unittest.TestCase):
         self.assertIn("Session source: resume", context)
         self.assertNotIn(str(repo), context)
 
+    def test_task_and_handover_state_are_reported(self):
+        repo = self.fixture_repo()
+        (repo / "TASKS.md").write_text("| DEMO | task | `ready for review` |\n", encoding="utf-8")
+        (repo / "HANDOVER.md").write_text("Status: current\n", encoding="utf-8")
+        context = render_context(review_repo(repo))
+        self.assertIn("Task register: present (TASKS.md)", context)
+        self.assertIn("Handover: present (HANDOVER.md)", context)
+        self.assertIn("Receipt sequence: /task-list-update then /handover", context)
+
     def test_output_is_native_additional_context(self):
         repo = self.fixture_repo()
         output = hook_output({"source": "new"}, repo=repo)
@@ -51,7 +61,7 @@ class CopilotSessionStateTests(unittest.TestCase):
         self.assertIn("SESSION STATE (read-only)", output["additionalContext"])
 
     def test_script_emits_json(self):
-        script = ROOT / "scripts" / "copilot_session_state.py"
+        script = HOOK_ROOT / "copilot_session_state.py"
         result = subprocess.run([sys.executable, str(script)], input='{"source":"new"}',
                                 cwd=ROOT.parent, capture_output=True, text=True, check=True)
         output = json.loads(result.stdout)

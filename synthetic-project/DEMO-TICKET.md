@@ -33,8 +33,6 @@ Run from `synthetic-project/`:
 
 ```bash
 python3 -m unittest discover -s tests -v
-python3 scripts/run_pipeline.py --scenario healthy --output-dir runs/accept-healthy
-python3 scripts/run_pipeline.py --scenario evaluation-warning --output-dir runs/accept-evaluation-warning
 ```
 
 The healthy command must return `0` and, after the change, include:

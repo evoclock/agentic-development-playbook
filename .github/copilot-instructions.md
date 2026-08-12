@@ -1,59 +1,67 @@
 # Copilot CLI project instructions
 
-This is a public synthetic data-science operations playbook.
-The runnable process is under `synthetic-project/`.
+This repository is a public playbook for governed agentic-AI development. The
+working contract is task-first, supervised, evidence-driven, and independent
+of any one provider or CLI feature.
 
 ## Required workflow
 
-1. Inspect the task, relevant source, and runbook.
-2. State the files to change and the acceptance checks.
-3. Use the smallest suitable change.
-4. Add or update tests for code changes.
-5. Run the real pipeline scenario and the full test suite.
-6. Inspect the complete diff.
-7. Report evidence, limits, and open questions.
+1. Read `AGENTS.md`, `README.md`, and the matching row in `TASKS.md`.
+2. Read the relevant skill and runbook before acting.
+3. State the goal, files in scope, files unchanged, checks, and stopping point.
+4. Use the smallest suitable model, effort, tool set, and edit.
+5. Run focused tests and the repository-authorized validation checks.
+6. Inspect the complete diff and public claims.
+7. Record evidence, limitations, open questions, and the next decision.
+8. Stop before commit, push, merge, publication, or an unclear boundary.
 
-The `sessionStart` hook provides a read-only branch, working-tree, task, and
-test summary. It is context only. It does not approve work or replace review.
+## Model routing
 
-Hook boundaries and the context-pressure decision are documented in
-`docs/copilot-hooks.md`.
+The root `TASKS.md` contains role-tagged router fixtures. Resolve a task
+without starting another session:
 
-The optional context diagnostic can classify launcher-supplied telemetry:
-
-```text
-python3 synthetic-project/scripts/copilot_context_pressure.py --percent 60
+```bash
+python3 .github/skills/model-routing/model_router.py \
+  --task-id ROUTER-PLAN-001
 ```
 
-Copilot `sessionStart` does not reliably provide context usage percentages, so
-this diagnostic is not installed as an active hook.
-
-## Commands
-
-Run these commands from the repository root:
+In Pi, configure and activate live assignments with:
 
 ```text
-python3 synthetic-project/scripts/run_pipeline.py --scenario healthy
-python3 synthetic-project/scripts/run_pipeline.py --scenario evaluation-warning
-python3 synthetic-project/scripts/run_pipeline.py --scenario row-loss
-python3 synthetic-project/scripts/run_pipeline.py --scenario schema-failure
-python3 -m unittest discover -s synthetic-project/tests -v
+/router
+/router show
+/router task ROUTER-PLAN-001
 ```
 
-Expected scenario meanings and artifacts are documented in
-`synthetic-project/README.md` and
-`synthetic-project/runbooks/pipeline-triage.md`.
+`#implementer`, `#planner`, and `#reviewer` select implementation, planning,
+and review. Extra tags remain context. A live Copilot model-activation adapter
+is not claimed until it is validated against the installed CLI.
 
-## Boundaries
+## Skills and hooks
 
-- Keep examples synthetic and public-safe.
-- Use the standard library only.
-- Do not install packages during the walkthrough.
-- Do not add real data, secrets, private endpoints, or private paths.
-- Keep generated run output under `synthetic-project/runs/`.
-- Do not edit generated run output as a substitute for source changes.
-- Do not publish repository history from the agent session.
-- Treat warnings as evidence requiring review, not as personal judgements.
+Read the relevant skill under `.github/skills/`:
 
-Use `/pipeline-run-triage` for run manifests, generated artifacts, thresholds,
-health status, or promotion evidence.
+- `task-list-update` — record one approved subtask and next decision;
+- `handover` — preserve state at a stopping point;
+- `model-routing` — select role, model, and effort;
+- `security-review` — review sensitive and adversarial content;
+- `pipeline-run-triage` — review observable artifacts and failures.
+
+The `.github/hooks/` configurations provide narrow boundaries:
+
+- `session-state.json` invokes `copilot_session_state.py` for read-only context;
+- `public-safety.json` invokes `copilot_pretool_check.py` for deny decisions and
+  content review.
+
+Hooks are context and boundary controls. They do not approve work, choose new
+tasks, or replace human review.
+
+## Commands and boundaries
+
+Use only the focused checks named by the task and relevant runbook. Do not
+install packages during the supervised demonstration. Do not add credentials,
+private endpoints, personal data, or unreviewed network access. Do not publish
+repository history from the agent session.
+
+The repository remains the authority for task scope, receipts, evidence, and
+stopping points.

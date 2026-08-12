@@ -1,37 +1,43 @@
 ---
 name: pipeline-run-triage
-description: Review a synthetic data-science pipeline run using generated artifacts, thresholds, provenance, and failure evidence. Use when a task concerns run manifests, pipeline health, validation, AUC, row retention, warnings, failures, or promotion evidence.
+description: Review a deterministic evidence run using artifacts, thresholds, provenance, and failure evidence. Use when a task concerns validation, metrics, warnings, failures, or promotion evidence.
 ---
 
-# Pipeline run triage
+# Evidence-run triage
 
-Use this skill for the executable project under `synthetic-project/`.
+Use this skill when an agent must review an executable deterministic process and
+explain its evidence. The process may be a validation job, test run, evaluation,
+security check, or other approved evidence-producing command.
 
 ## Procedure
 
-1. Read `synthetic-project/runbooks/pipeline-triage.md`.
-2. Read the task and inspect the relevant run directory.
-3. Run the requested scenario with `synthetic-project/scripts/run_pipeline.py`.
-4. Read `run_manifest.json`, `validation.json`, `evaluation.json`, `provenance.json`, and `failure_log.jsonl` as relevant.
-5. Compare each check with its configured threshold.
+1. Read the matching task row and acceptance contract in `TASKS.md`.
+2. Read the relevant runbook and inspect the approved evidence directory.
+3. Run the focused tests when scenario evidence is missing.
+4. Read the relevant manifest, validation, metrics, provenance, and failure
+   artifacts.
+5. Compare every check with its configured threshold or acceptance condition.
 6. State the status, evidence, next controlled action, and unchanged files.
-7. Run focused tests, then the full suite when code changes are complete.
+7. Run focused tests, then the authorized wider suite when code changes are
+   complete.
 
 ## Output format
 
 ```text
-Status: <HEALTHY|WARNING|FAILED>
+Status: <HEALTHY|WARNING|FAILED|REVIEW_REQUIRED>
+Task: <task id and role tag>
 Evidence:
 - <artifact>: <metric, observed value, and threshold>
 Action: <next controlled step>
 Scope: <files changed and files unchanged>
+Open questions: <explicit uncertainty>
 ```
 
 ## Boundaries
 
-- Use only evidence in generated artifacts and the runbook.
+- Use only evidence in approved artifacts and the relevant runbook.
 - Do not invent a cause for a warning.
-- Treat a warning as review evidence, not as a judgement about a person.
-- Do not edit generated run output to make a check pass.
-- Keep promotion decisions subject to human review.
-- Keep examples synthetic and standard-library only.
+- Treat a warning as review evidence, not a judgement about a person.
+- Do not edit generated evidence to make a check pass.
+- Keep promotion and publication decisions subject to human review.
+- Use public-safe, standard-library examples and do not expose private data.

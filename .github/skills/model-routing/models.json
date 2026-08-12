@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "models": [
+    {
+      "id": "local-coding",
+      "label": "Local coding model",
+      "provider": "local",
+      "available": true,
+      "cost_tier": "low",
+      "capabilities": ["implementation"],
+      "efforts": ["low", "medium"]
+    },
+    {
+      "id": "general-planner",
+      "label": "General planning model",
+      "provider": "configured",
+      "available": true,
+      "cost_tier": "standard",
+      "capabilities": ["implementation", "planning", "review"],
+      "efforts": ["low", "medium", "high"]
+    },
+    {
+      "id": "review-specialist",
+      "label": "Review specialist",
+      "provider": "configured",
+      "available": true,
+      "cost_tier": "high",
+      "capabilities": ["planning", "review"],
+      "efforts": ["medium", "high", "max"]
+    }
+  ],
+  "tag_routes": [
+    {
+      "tag": "implementer",
+      "role": "implementation",
+      "model": "local-coding",
+      "effort": "medium",
+      "reason": "The implementer tag selects the implementation assignment."
+    },
+    {
+      "tag": "planner",
+      "role": "planning",
+      "model": "general-planner",
+      "effort": "high",
+      "reason": "The planner tag selects the planning assignment."
+    },
+    {
+      "tag": "reviewer",
+      "role": "review",
+      "model": "review-specialist",
+      "effort": "high",
+      "reason": "The reviewer tag selects the review assignment."
+    },
+    {
+      "tag": "routine",
+      "role": "implementation",
+      "model": "local-coding",
+      "effort": "medium",
+      "reason": "The routine tag selects the lowest-cost capable implementation route."
+    },
+    {
+      "tag": "ambiguous",
+      "role": "planning",
+      "model": "general-planner",
+      "effort": "high",
+      "reason": "The ambiguous tag selects stronger planning effort."
+    },
+    {
+      "tag": "independent-review",
+      "role": "review",
+      "model": "review-specialist",
+      "effort": "high",
+      "reason": "The independent-review tag selects a separate review route."
+    }
+  ],
+  "routes": {
+    "implementation": {
+      "model": "local-coding",
+      "effort": "medium",
+      "reason": "Use the lowest-cost configured model capable of routine implementation."
+    },
+    "planning": {
+      "model": "general-planner",
+      "effort": "high",
+      "reason": "Use stronger reasoning for ambiguous plans and trade-offs."
+    },
+    "review": {
+      "model": "review-specialist",
+      "effort": "high",
+      "reason": "Use a separate, stronger review pass for evidence and risk."
+    }
+  }
+}

@@ -3,16 +3,17 @@
 This runbook explains how to run and inspect the executable synthetic pipeline.
 It is a local teaching example. It does not represent a production service.
 
-## Run a scenario
+## Scenario evidence
 
-From `synthetic-project/`:
+The deterministic scenario behaviour is exercised by
+`synthetic-project/tests/test_pipeline_runner.py`:
 
 ```bash
-python3 scripts/run_pipeline.py --scenario healthy --output-dir runs/triage-healthy
+python3 -m unittest synthetic-project/tests/test_pipeline_runner.py -v
 ```
 
-The command creates 400 records with seed `17` and writes evidence under the
-selected output directory. Use a new directory for each scenario.
+The tests create temporary evidence directories and preserve the scenario
+contract without requiring a separate command-line wrapper.
 
 Available scenarios:
 

@@ -35,12 +35,12 @@ seed + scenario
 The model is intentionally simple. Its purpose is to create reproducible
 operational evidence, not to claim useful predictive performance.
 
-## Run the real process
+## Run the deterministic checks
 
 Run from `synthetic-project/`:
 
 ```bash
-python3 scripts/run_pipeline.py --scenario healthy --output-dir runs/demo-healthy
+python3 -m unittest discover -s tests -v
 ```
 
 The command generates 400 records with seed `17`. It writes nine files under
@@ -122,16 +122,3 @@ Expected outputs are kept in [`expected-output/`](expected-output/):
 - `after-row-retention-check.txt` — foundation retention warning;
 - `after-min-test-rows-check.txt` — expected output for the current task;
 - `schema-failure.txt` — validation stop and failure status.
-
-## Optional context diagnostic
-
-The repository includes a standalone diagnostic for a launcher that can supply
-`AGENT_CONTEXT_PERCENT` or a `--percent` value:
-
-```bash
-python3 scripts/copilot_context_pressure.py --percent 60
-```
-
-It is not an active Copilot hook because Copilot `sessionStart` does not expose
-reliable context usage telemetry. See [`docs/copilot-hooks.md`](../docs/copilot-hooks.md)
-for the hook boundary and verification limits.

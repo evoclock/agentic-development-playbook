@@ -10,6 +10,7 @@ from typing import Any
 DEFAULT_MIN_AUC = 0.80
 DEFAULT_MAX_SCHEMA_ERRORS = 0
 DEFAULT_MIN_ROW_RETENTION = 0.99
+DEFAULT_MIN_TEST_ROWS = 50
 EXIT_CODES = {"healthy": 0, "warning": 1, "failed": 2}
 VALID_STATUSES = {"passed", "warning", "failed"}
 
@@ -51,6 +52,7 @@ def evaluate_manifest(
     manifest: dict[str, Any], *, min_auc: float = DEFAULT_MIN_AUC,
     max_schema_errors: int = DEFAULT_MAX_SCHEMA_ERRORS,
     min_row_retention: float = DEFAULT_MIN_ROW_RETENTION,
+    min_test_rows: int = DEFAULT_MIN_TEST_ROWS,
 ) -> dict[str, Any]:
     """Evaluate checks without changing the input manifest."""
     for field in ("run_id", "pipeline", "dataset", "stages"):
@@ -88,6 +90,13 @@ def evaluate_manifest(
             operator = ">=" if check_status == "pass" else "<"
             checks.append({"name": "features.row_retention", "status": check_status,
                            "detail": f"{retention:.3f} {operator} {min_row_retention:.3f}"})
+            warning = warning or check_status == "warning"
+        if name == "evaluate" and "test_rows" in metrics:
+            test_rows = _number(metrics["test_rows"], "evaluate.test_rows")
+            check_status = "pass" if test_rows >= min_test_rows else "warning"
+            operator = ">=" if check_status == "pass" else "<"
+            checks.append({"name": "evaluate.test_rows", "status": check_status,
+                           "detail": f"{test_rows:g} {operator} {min_test_rows:g}"})
             warning = warning or check_status == "warning"
         if "auc" in metrics:
             auc = _number(metrics["auc"], f"{name}.auc")
@@ -135,11 +144,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--min-auc", type=float, default=DEFAULT_MIN_AUC)
     parser.add_argument("--max-schema-errors", type=int, default=DEFAULT_MAX_SCHEMA_ERRORS)
     parser.add_argument("--min-row-retention", type=float, default=DEFAULT_MIN_ROW_RETENTION)
+    parser.add_argument("--min-test-rows", type=int, default=DEFAULT_MIN_TEST_ROWS)
     args = parser.parse_args(argv)
     try:
         report = evaluate_manifest(load_manifest(args.manifest), min_auc=args.min_auc,
                                    max_schema_errors=args.max_schema_errors,
-                                   min_row_retention=args.min_row_retention)
+                                   min_row_retention=args.min_row_retention,
+                                   min_test_rows=args.min_test_rows)
     except ValueError as exc:
         print(f"Input error: {exc}", file=sys.stderr)
         return 2

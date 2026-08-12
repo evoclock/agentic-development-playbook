@@ -8,8 +8,10 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-TASK_PATH = "synthetic-project/DEMO-TICKET.md"
-TEST_COMMAND = "python3 -m unittest discover -s synthetic-project/tests -v"
+TASK_PATH = "TASKS.md"
+TASK_REGISTER_PATH = "TASKS.md"
+HANDOVER_PATH = "HANDOVER.md"
+TEST_COMMAND = "python3 -m unittest discover -s .github/skills/model-routing/tests -v"
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -20,14 +22,33 @@ def _git(repo: Path, *args: str) -> str:
     return result.stdout.strip()
 
 
+def _document_state(repo: Path, relative_path: str) -> dict[str, str]:
+    path = repo / relative_path
+    if not path.is_file():
+        return {"path": relative_path, "status": "missing"}
+    marker = ""
+    for line in path.read_text(encoding="utf-8").splitlines():
+        lowered = line.lower()
+        if any(token in lowered for token in
+               ("`in progress`", "`ready for review`", "`blocked`", "`complete`")):
+            marker = line.strip()
+            break
+        if lowered.startswith("status:"):
+            marker = line.strip()
+            break
+    return {"path": relative_path, "status": "present", "marker": marker}
+
+
 def review_repo(repo: Path = REPO_ROOT) -> dict[str, Any]:
-    """Read branch and working-tree state without changing the repository."""
+    """Read branch, task, handover, and working-tree state without writing."""
     status_lines = [line for line in _git(repo, "status", "--short").splitlines() if line]
     return {
         "branch": _git(repo, "branch", "--show-current") or "(detached)",
         "head": _git(repo, "rev-parse", "--short", "HEAD"),
         "status": status_lines,
         "diff_stat": _git(repo, "diff", "--stat") or "(clean)",
+        "task_register": _document_state(repo, TASK_REGISTER_PATH),
+        "handover": _document_state(repo, HANDOVER_PATH),
     }
 
 
@@ -39,13 +60,20 @@ def render_context(state: dict[str, Any], payload: dict[str, Any] | None = None)
         f"Session source: {source}",
         f"Branch: {state['branch']} @ {state['head']}",
         f"Working tree: {'clean' if not state['status'] else 'review required'}",
-        f"Demo task: {TASK_PATH}",
+        f"Task source: {TASK_PATH}",
+        f"Task register: {state['task_register']['status']} ({TASK_REGISTER_PATH})",
+        f"Handover: {state['handover']['status']} ({HANDOVER_PATH})",
+        "Receipt sequence: /task-list-update then /handover at a subtask stop.",
         f"Test command: {TEST_COMMAND}",
         "Next action: inspect the task, state a bounded plan, then run focused checks.",
     ]
     if state["status"]:
         lines.append("Changed paths:")
         lines.extend(f"  - {line}" for line in state["status"][:12])
+    if state["task_register"].get("marker"):
+        lines.append(f"Task register marker: {state['task_register']['marker']}")
+    if state["handover"].get("marker"):
+        lines.append(f"Handover marker: {state['handover']['marker']}")
     lines.append(f"Diff summary: {state['diff_stat']}")
     return "\n".join(lines)
 

@@ -8,13 +8,13 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CONTEXT_FILES = {
-    "overview": PROJECT_ROOT / "README.md",
+    "overview": PROJECT_ROOT / "INDEX.md",
     "runbook": PROJECT_ROOT / "runbooks" / "pipeline-triage.md",
     "ticket": PROJECT_ROOT / "DEMO-TICKET.md",
     "fixture_manifest": PROJECT_ROOT / "fixtures" / "run_manifest.json",
 }
 EVIDENCE = [
-    "synthetic-project/README.md",
+    "synthetic-project/INDEX.md",
     "synthetic-project/DEMO-TICKET.md",
     "synthetic-project/runbooks/pipeline-triage.md",
     "synthetic-project/fixtures/run_manifest.json",

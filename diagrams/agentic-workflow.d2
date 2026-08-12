@@ -1,0 +1,56 @@
+# Public workflow diagram. Render with: d2 -l elk --pad 60 agentic-workflow.d2 agentic-workflow.svg
+# PNG companion: rsvg-convert -o agentic-workflow.png agentic-workflow.svg
+
+direction: down
+style.fill: "#18191a"
+
+classes: {
+  owner: { style: { fill: "#4a4540"; stroke: "#ee9b69"; stroke-width: 4; border-radius: 12; font-color: "#ead1b5"; font-size: 25; bold: true } }
+  contract: { style: { fill: "#4a4540"; stroke: "#e77843"; stroke-width: 4; border-radius: 12; font-color: "#ead1b5"; font-size: 25; bold: true } }
+  context: { style: { fill: "#383431"; stroke: "#79c39e"; stroke-width: 4; border-radius: 12; font-color: "#ead1b5"; font-size: 25; bold: true } }
+  action: { style: { fill: "#383431"; stroke: "#ead1b5"; stroke-width: 4; border-radius: 12; font-color: "#ead1b5"; font-size: 25; bold: true } }
+  evidence: { style: { fill: "#383431"; stroke: "#79c39e"; stroke-width: 4; border-radius: 12; font-color: "#ead1b5"; font-size: 25; bold: true } }
+  review: { style: { fill: "#4a4540"; stroke: "#ee9b69"; stroke-width: 4; border-radius: 12; font-color: "#ead1b5"; font-size: 25; bold: true } }
+}
+
+title: "AGENTIC DEVELOPMENT WORKFLOW\nScope · execute · review" { class: owner; width: 760; height: 125; style.font-size: 30 }
+title -> scope.owner: { style.opacity: 0 }
+
+scope: {
+  label: ""
+  direction: down
+  style: { fill: "#242220"; stroke: "#5c564f"; stroke-width: 4; border-radius: 16; font-color: "#ead1b5"; font-size: 27; bold: true }
+  owner: "1 · SCOPE AND CONTEXT\nHUMAN OWNER\nDefines objective · approval · stop point" { class: owner; width: 620; height: 145 }
+  contract: "TASK CONTRACT\nGoal · paths · checks · stop point" { class: contract; width: 620; height: 110 }
+  context: "PROJECT CONTEXT\nInstructions · task · runbook" { class: context; width: 620; height: 110 }
+  owner -> contract: { style: { stroke: "#ee9b69"; stroke-width: 4 } }
+  contract -> context: { style: { stroke: "#e77843"; stroke-width: 4 } }
+}
+
+delivery: {
+  label: ""
+  direction: down
+  style: { fill: "#242220"; stroke: "#5c564f"; stroke-width: 4; border-radius: 16; font-color: "#ead1b5"; font-size: 27; bold: true }
+  skill: "2 · CONTROLLED DELIVERY\nREPEATABLE SKILL\nInputs · steps · outputs" { class: action; width: 620; height: 145 }
+  tools: "SCOPED TOOLS\nRead · test · edit · review" { class: action; width: 620; height: 110 }
+  pipeline: "DETERMINISTIC PROCESS\nSynthetic data · checks · artifacts" { class: evidence; width: 620; height: 110 }
+  skill -> tools: { style: { stroke: "#ead1b5"; stroke-width: 4 } }
+  tools -> pipeline: { style: { stroke: "#79c39e"; stroke-width: 4 } }
+}
+
+assurance: {
+  label: ""
+  direction: down
+  style: { fill: "#242220"; stroke: "#5c564f"; stroke-width: 4; border-radius: 16; font-color: "#ead1b5"; font-size: 27; bold: true }
+  evidence: "3 · EVIDENCE AND REVIEW\nREVIEWABLE EVIDENCE\nTests · reports · complete diff" { class: evidence; width: 620; height: 145 }
+  review: "HUMAN REVIEW\nApprove · revise · stop" { class: review; width: 620; height: 110 }
+  evidence -> review: { style: { stroke: "#79c39e"; stroke-width: 4 } }
+}
+
+# The primary path is a single, unlabelled arrow lane between explicit stages.
+scope.context -> delivery.skill: { style: { stroke: "#79c39e"; stroke-width: 4 } }
+
+delivery.pipeline -> assurance.evidence: { style: { stroke: "#79c39e"; stroke-width: 4 } }
+
+# Review can revise the contract; the dashed return is deliberately the only loop.
+assurance.review -> scope.contract: { style: { stroke: "#e77843"; stroke-width: 4; stroke-dash: 4 } }

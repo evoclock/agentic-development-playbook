@@ -12,7 +12,13 @@ It exposes two read-only tools:
 The server does not write files. It does not make network requests. It does not
 accept arbitrary filesystem paths.
 
-## Register it with Copilot CLI
+## DfE recording boundary
+
+The default DfE recording does not register or run this server. It refers to MCP
+as a reviewed, read-only context pattern only. Use the registration command
+below only after a separate policy decision approves a live MCP test.
+
+## Optional registration with Copilot CLI
 
 Run this command from the repository root after reviewing the source:
 
