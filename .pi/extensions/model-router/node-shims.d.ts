@@ -1,7 +1,15 @@
 declare module "node:fs" {
   export function readFileSync(path: string, encoding: "utf8"): string;
   export function readFileSync(path: string, options: { encoding: "utf8" }): string;
+  export function readFileSync(path: string): Uint8Array;
+  export function appendFileSync(path: string, data: string): void;
+  export function existsSync(path: string): boolean;
+  export function mkdirSync(path: string, options?: { recursive?: boolean }): void;
 }
+
+declare const Buffer: {
+  from(value: Uint8Array): { toString(encoding: "base64"): string };
+};
 
 declare module "node:path" {
   export function join(...paths: string[]): string;
@@ -32,11 +40,14 @@ declare module "@earendil-works/pi-coding-agent" {
     session_tree: [event: unknown, ctx: ExtensionContext];
     model_select: [event: { model: PiModel }, ctx: ExtensionContext];
     before_agent_start: [event: { systemPrompt: string }, ctx: ExtensionContext];
+    tool_execution_end: [event: { toolName: string; isError?: boolean; input?: unknown }, ctx: ExtensionContext];
+    turn_end: [event: { message?: { stopReason?: string } }, ctx: ExtensionContext];
   };
 
   export interface ExtensionContext {
     cwd: string;
     mode: "tui" | "rpc" | "json" | "print";
+    hasUI: boolean;
     model?: PiModel;
     thinkingLevel?: ThinkingLevel;
     modelRegistry: { getAvailable(): PiModel[] };
