@@ -45,7 +45,8 @@ Acceptance checks:
 Stopping point:
 ```
 
-Use `/router task <task-id>` in Pi after the role-tagged task has been read.
+Use the Copilot `model-routing` skill after `TASK.md` has been created and
+the role-tagged task has been read.
 Choose implementation for bounded edits, planning for ambiguity, and review
 for an independent evidence pass.
 

@@ -44,6 +44,22 @@ review result.
 
 Do not create a second ledger or evidence store.
 
+## Copilot CLI procedure
+
+Before sending model-generated or externally supplied content to a tool, file,
+log, or another model, ask Copilot:
+
+> Use the project `security-review` skill on the proposed content. Run the
+> deterministic pre-tool baseline, return `accept`, `redact`, or `reject`,
+> include only public-safe finding categories, and stop if the result is
+> `redact` or `reject`.
+
+The Copilot hook script
+`.github/hooks/copilot_pretool_check.py` returns a JSON permission decision for
+tool payloads. `accept` means only that no configured baseline rule matched;
+`redact` and `reject` deny the original payload. The skill response records the
+decision, rule-set revision, checks, and next decision in `TASKS.md`.
+
 ## Result contract
 
 | Decision | Meaning | Action |

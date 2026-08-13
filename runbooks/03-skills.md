@@ -50,23 +50,27 @@ The workflow diagram places these skills between the task contract and human
 review: skills make the procedure repeatable, scoped tools limit actions, and
 deterministic checks make outcomes inspectable.
 
-## Model-routing skill
+## Model-routing skill (Copilot CLI path)
 
 Use the routing skill when a task needs an explicit implementation, planning,
-or review route. Read the matching `TASKS.md` row first, then use:
+or review route. Create/read `TASK.md` first, then ask Copilot:
 
 ```text
-/router
-/router show
-/router task ROUTER-PLAN-001
+Use the project model-routing skill. Sync the Copilot roster, show compatible
+models and all effort levels, ask me to select implementation/planning/review
+assignments, save them, and route TASK.md before doing task work.
 ```
 
-For a deterministic non-provider preview:
+The skill calls:
 
 ```bash
+python3 .github/skills/model-routing/sync_runtime_models.py
 python3 .github/skills/model-routing/model_router.py \
-  --task-id ROUTER-PLAN-001
+  --task-file TASK.md
 ```
+
+The first command writes raw and normalized roster outputs. The second emits
+the task route and reads the saved role assignments.
 
 ## Output contract
 
@@ -100,7 +104,6 @@ Run the focused model-routing checks:
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
   -s .github/skills/model-routing/tests -v
-node --test .pi/extensions/model-router/logic.test.ts
 ```
 
 ## Boundaries

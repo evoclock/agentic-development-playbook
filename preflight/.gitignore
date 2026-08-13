@@ -1,0 +1,4 @@
+.github/skills/model-routing/models.raw.jsonl
+.github/skills/model-routing/models.runtime.json
+.github/skills/model-routing/models.assignments.json
+__pycache__/

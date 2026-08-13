@@ -1,0 +1,20 @@
+{
+  "run_id": "preflight-healthy",
+  "scenario": "healthy",
+  "stages": [
+    {
+      "name": "evaluate",
+      "status": "passed",
+      "metrics": {
+        "test_rows": 100,
+        "minimum_test_rows": 50
+      },
+      "artifacts": [
+        "evaluation.json",
+        "provenance.json",
+        "health_report.json",
+        "failure_log.jsonl"
+      ]
+    }
+  ]
+}

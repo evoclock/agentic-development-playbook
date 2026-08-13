@@ -9,11 +9,13 @@ task contract, not a transcript of the whole repository.
 
 1. `AGENTS.md`;
 2. `README.md`;
-3. the matching row in `TASKS.md`;
-4. `.github/skills/model-routing/SKILL.md`;
-5. the relevant source and tests;
-6. the relevant runbook;
-7. the expected evidence or output contract.
+3. create or read the active `TASK.md` contract;
+4. the matching row in the local `TASKS.md` (create the ignored register if
+   this checkout does not have one);
+5. `.github/skills/model-routing/SKILL.md`;
+6. the relevant source and tests;
+7. the relevant runbook;
+8. the expected evidence or output contract.
 
 Do not paste credentials, private context, raw session logs, or an entire
 repository into a prompt.
@@ -34,9 +36,10 @@ Commands allowed:
 Stopping point:
 ```
 
-The root `TASKS.md` is the authoritative task register. The router reads the
-hash tags from the matching row. Extra tags provide context; the first mapped
-role tag selects the route.
+The local `TASKS.md` is the authoritative task register for this checkout. The
+router reads the hash tags from the matching row unless an active `TASK.md`
+contract is provided. `TASK.md` is the task contract, not a second register.
+Extra tags provide context; the first mapped role tag selects the route.
 
 ## Inspect before editing
 
@@ -48,10 +51,11 @@ python3 .github/skills/model-routing/model_router.py \
   --task-id ROUTER-IMPLEMENT-001
 ```
 
-In Pi, inspect the current route with:
+In Copilot CLI, inspect the current route by asking:
 
 ```text
-/router show
+Use the project model-routing skill to show the saved role assignments and
+route the active TASK.md contract without starting task work.
 ```
 
 ## Plan contract

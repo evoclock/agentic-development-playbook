@@ -1,0 +1,7 @@
+{
+  "metric": "test_rows",
+  "value": 100,
+  "threshold": 50,
+  "comparison": "greater_than_or_equal",
+  "result": "pass"
+}
