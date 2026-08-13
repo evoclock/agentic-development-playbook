@@ -67,51 +67,23 @@ produces repeatable checks; human review remains the final control.
 
 ## The actual working demo: role-based model routing
 
-The repository includes a real project-local Pi extension that makes one part
-of this operating model executable. It assigns separate available models and
-effort levels to three kinds of work:
+The repository includes a Copilot CLI skill and deterministic resolver for
+three kinds of work:
 
 - **implementation** — bounded coding and focused changes;
 - **planning** — ambiguity, decomposition, and trade-offs;
 - **review** — independent evidence, scope, and risk review.
 
 The router is deliberately session-local. It does not create a task board,
-routing ledger, or provider session.
-
-### Start the Pi demo
-
-From a trusted checkout:
-
-```bash
-cd /path/to/agentic-development-playbook
-pi
-```
-
-If Pi asks whether to trust the project, approve the project-local extension.
-Then configure the three assignments:
-
-```text
-/router
-/router show
-```
-
-`/router` opens six selectors: a model and an effort for each role. The model
-selector uses Pi's actual authenticated `ctx.modelRegistry.getAvailable()`
-catalogue. It does not pretend that public configuration labels are live
-providers.
-
-Activate a configured role directly:
-
-```text
-/router use implementation
-/router use planning
-/router use review
-```
+routing ledger, or provider session. The repository has no provider-specific extension; the supported live workflow
+is Copilot CLI plus the deterministic local resolver.
 
 ### Route a task by its own tags
 
-The root [`TASKS.md`](TASKS.md) is the authoritative task register. It also
-contains nine public demo fixtures, three for each role. Their role tags are:
+The local `TASKS.md` is the authoritative task register for a supervised
+checkout. It is intentionally ignored by Git; create it during task setup if
+the checkout does not already have one. This working copy contains nine public
+demo fixtures, three for each role. Their role tags are:
 
 | Task tag | Route |
 |---|---|
@@ -121,32 +93,106 @@ contains nine public demo fixtures, three for each role. Their role tags are:
 
 Other tags remain context. Point at the task; do not repeat the role tag:
 
+`TASK.md` is the active task contract; the local `TASKS.md` remains the
+register. The Copilot route command reads the contract's task ID and role tag,
+maps the role to the saved assignment, and emits JSON before task work begins.
+The JSON includes a model-bound execution template. Copilot launches the
+bounded task in a separate model-bound process. Participants do not launch
+that process from a shell; they ask Copilot to continue the routed session.
+
+That selected model performs the task and may call Bash within its own
+session. Preserve any returned session ID, usage, and tool telemetry. This
+proves model launch/configuration, not provider execution attestation.
+
+### Copilot CLI path (use this)
+
+The Python `--interactive` mode is **real-terminal-only** because it requires
+connected stdin. In Copilot, invoke the project skill and let Copilot present
+choices through its user interaction.
+
+The first step for a new piece of work is to ask Copilot:
+
+> Create a root `TASK.md` task contract for this work. Include the Task ID,
+> exactly one role tag (`#implementer`, `#planner`, or `#reviewer`), goal, files
+> in scope, files unchanged, existing behaviour to preserve, acceptance checks,
+> allowed commands, and stopping point. Keep `TASKS.md` as the authoritative
+> register; `TASK.md` is only the active contract for this session. The
+> register is local-only, so create `TASKS.md` during setup if it is absent.
+
+Then ask Copilot to run the model-routing onboarding:
+
+> Use the project `model-routing` skill. Run
+> `python3 .github/skills/model-routing/sync_runtime_models.py`, read
+> `models.runtime.json`, show me the available Copilot models and all supported
+> effort levels (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`),
+> and ask me to choose a model and effort independently for implementation,
+> planning, and review. Save each confirmed choice for this session. If
+> `TASKS.md` is absent, create the local register before recording the task.
+
+The skill calls these scripts:
+
+| Script | Purpose | Output |
+|---|---|---|
+| `sync_runtime_models.py` | refresh the Copilot model snapshot | `models.raw.jsonl` and `models.runtime.json`, plus a model count |
+| `model_router.py --role ... --model ... --effort ... --save-assignment` | validate and save one role assignment | JSON route confirmation and `models.assignments.json` |
+| `model_router.py --task-file TASK.md` | read the active contract, map its role tag, and select the saved role route | JSON containing task ID, source, tags, role, model, provider, effort, and selection |
+
+The runtime roster is local session evidence generated from Copilot's
+available-model response; it contains no credentials. The resolver does not
+activate a provider model by itself.
+
+After the three choices are confirmed, ask:
+
+> Read `TASK.md` and use the `model-routing` skill to route its task. Run
+> `python3 .github/skills/model-routing/model_router.py --task-file TASK.md`
+> and return the JSON route decision before doing any task work.
+
+The router maps the active contract's role tag to the saved assignment:
+
 ```text
-/router task ROUTER-IMPLEMENT-001
-/router task ROUTER-PLAN-001
-/router task ROUTER-REVIEW-001
+#implementer -> implementation
+#planner     -> planning
+#reviewer    -> review
 ```
 
-The command reads the matching task row, maps its first role tag, activates
-that role's selected model and effort, persists the active route in the
-current Pi session, and injects the route into the next agent turn. A
-conflicting explicit tag is rejected. The command itself does not start a
-provider request.
+At a subtask stopping point, ask Copilot:
 
-### Copilot-compatible resolution
+> Use `task-list-update` to record this approved subtask, its files, checks,
+> evidence, open questions, and next decision in `TASKS.md`. Then use
+> `handover` to refresh the repository-root `HANDOVER.md` with the current
+> task, state, files, commands, evidence, limitations, and next decision.
 
-The same task-tag contract can be resolved without starting a provider:
+Expected state outputs:
+
+- `TASK.md` — active task contract;
+- local `TASKS.md` — ignored task register and dated subtask receipt;
+- `HANDOVER.md` — fresh stopping-point state for resuming work;
+- `models.raw.jsonl` — raw model-roster response;
+- `models.runtime.json` — normalized available-model roster;
+- `models.assignments.json` — session role/model/effort assignments.
+
+### Optional user-level shortcut (run from any directory)
+
+If you want role routing without changing into the repository each time, add a
+shell function that points at your local checkout:
 
 ```bash
-python3 .github/skills/model-routing/model_router.py \
-  --task-id ROUTER-REVIEW-001
+router-role () {
+  python3 ~/Documents/agentic-development-playbook/.github/skills/model-routing/model_router.py --role "$1"
+}
 ```
 
-The resolver emits the task ID, normalized tags, matched tag, role, configured
-model label, effort, selection mode, and reason. It is suitable for a
-Copilot-oriented workflow that needs a deterministic routing decision. A live
-Copilot model-activation adapter is a separate harness concern and must be
-validated before being claimed as active.
+Then reload your shell and call:
+
+```bash
+router-role implementation
+router-role planning
+router-role review
+```
+
+To update this in the future, change only the absolute repository path in the
+function. If the script gains new flags, pass them through as needed (for
+example by extending the function arguments).
 
 ## Rollout path
 
@@ -196,8 +242,8 @@ The repository demonstrates several complementary controls:
 - `.github/hooks/` contains narrow safety and session-context examples;
 - `TASKS.md` records task scope, role tags, receipts, decisions, and stopping
   points;
-- Pi stores router assignments in the current session rather than a parallel
-  store;
+- Copilot session assignments are stored in the ignored
+  `models.assignments.json` file rather than a parallel task board;
 - focused tests and complete-diff review provide evidence for changes.
 
 The hook and security examples are deliberately narrow. They are not a full
@@ -206,32 +252,171 @@ See [`docs/copilot-hooks.md`](docs/copilot-hooks.md) and
 [`docs/security-threat-intelligence-boundary.md`](docs/security-threat-intelligence-boundary.md)
 for limits and production questions.
 
+## User-level install for all repositories
+
+If you want the same skills and hooks in every Copilot CLI session, install a
+user-level copy under `~/.copilot`.
+
+1. Copy skills:
+
+```bash
+mkdir -p ~/.copilot/skills
+cp -R .github/skills/handover \
+  .github/skills/model-routing \
+  .github/skills/pipeline-run-triage \
+  .github/skills/security-review \
+  .github/skills/task-list-update \
+  ~/.copilot/skills/
+```
+
+2. Copy hook scripts:
+
+```bash
+mkdir -p ~/.copilot/hooks
+cp .github/hooks/copilot_pretool_check.py ~/.copilot/hooks/
+cp .github/hooks/copilot_session_state.py ~/.copilot/hooks/
+```
+
+3. Add a user-level hook config file at `~/.copilot/hooks/governed-demo-hooks.json`:
+
+```json
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "python3 ~/.copilot/hooks/copilot_session_state.py",
+        "powershell": "python $HOME/.copilot/hooks/copilot_session_state.py",
+        "timeoutSec": 10
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "python3 ~/.copilot/hooks/copilot_pretool_check.py",
+        "powershell": "python $HOME/.copilot/hooks/copilot_pretool_check.py",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}
+```
+
+4. Restart Copilot CLI (or start a new session), then verify:
+   - `/skills list` shows the installed user-level skills;
+   - `/env` shows hooks loaded from `~/.copilot/hooks`;
+   - a session starts with the `SESSION STATE (read-only)` block.
+
 ## Navigation
 
 - [`AGENTS.md`](AGENTS.md) — repository working contract;
-- [`TASKS.md`](TASKS.md) — authoritative task register and router fixtures;
+- local `TASKS.md` — ignored task register and router fixtures for this
+  checkout;
 - [`.github/skills/model-routing/SKILL.md`](.github/skills/model-routing/SKILL.md)
   — routing procedure and tag contract;
 - [`runbooks/07-model-efficiency.md`](runbooks/07-model-efficiency.md) —
   capability, effort, and routing guidance;
-- [`runbooks/09-pi-fallback.md`](runbooks/09-pi-fallback.md) — Pi session and
-  extension validation;
 - [`docs/adoption-and-outcomes.md`](docs/adoption-and-outcomes.md) — why
   adoption and outcomes must be measured separately;
 - [`docs/copilot-hooks.md`](docs/copilot-hooks.md) — hook boundaries and
   verification limits.
 
-## Focused checks
+## Run the complete preflight in the demo workspace
 
-```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
-  -s .github/skills/model-routing/tests -v
-node --test .pi/extensions/model-router/logic.test.ts
+The clone includes `demo-workspace/` as an empty, tracked container for the
+end-to-end rehearsal. Do not create `TASK.md`, `HANDOVER.md`, model state, or
+receipts in the playbook checkout. Create a named child workspace and run the
+full sequence there:
+
+```text
+Use the committed preflight fixture under preflight/. Invoke the existing
+preparation script yourself to create the named disposable workspace
+demo-workspace/preflight-001. Return the workspace path and do not modify the
+source checkout.
 ```
 
-After changing the Pi extension, restart Pi or run `/reload`. Plain project
-startup must register `/router` without treating the nested helper, test, or
-type-declaration files as separate extensions.
+Ask Copilot to continue the session from `demo-workspace/preflight-001/` before
+continuing. The preparation script copies the toy fixture, canonical skills
+and hooks, and the preflight runbook, then creates a local bootstrap commit
+inside the child workspace.
+The parent checkout ignores the child contents and keeps only
+`demo-workspace/.gitkeep`.
+
+### How the runbooks relate
+
+`runbooks/10-skill-preflight.md` is the one end-to-end rehearsal. It
+orchestrates the prompts and checks; participants do not run the other
+runbooks as additional demos.
+
+The other runbooks are supporting references:
+
+- `01-copilot-cli.md` and `02-project-context.md` explain session setup and
+  task scoping;
+- `03-skills.md`, `04-hooks.md`, and `07-model-efficiency.md` explain the
+  skills, hook boundaries, and model-routing decisions exercised by preflight;
+- `06-agentic-workflow.md` describes the broader plan, implement, test, review,
+  and stop lifecycle;
+- `08-publication-checks.md` applies after a real change, before publication,
+  and is outside this demo's stopping point;
+- `05-mcp.md` covers an optional integration that is explicitly excluded from
+  the default rehearsal.
+
+Use the relevant runbook for deeper guidance on a real task; do not repeat
+the preflight sequence by running every runbook. The maintained skills under
+`.github/skills/` provide the reusable procedures and output contracts, while
+the runbooks explain their context and broader use.
+
+The rehearsal is intentionally end to end. In the child workspace, create and
+route `TASK.md`, then run the bounded inspection, `security-review`,
+`pipeline-run-triage`, `task-list-update`, the history-change boundary, and
+`handover` prompts in
+[`runbooks/10-skill-preflight.md`](runbooks/10-skill-preflight.md).
+Model-routing is a required user-run stage: refresh the runtime roster,
+choose implementation, planning, and review assignments, save them, and
+return the JSON route before task work. The generated model state, task
+contract, receipts, and handover remain in the child workspace.
+
+The stages demonstrate:
+
+| Stage | Demonstration |
+|---|---|
+| Prepare child | isolate rehearsal state from the source checkout |
+| Create `TASK.md` | turn context into a bounded, reviewable contract |
+| Model routing | choose role, model, and effort before task work |
+| Bounded task | execute only the approved scope and collect evidence |
+| Security review | gate model-generated content before tool or file use |
+| Evidence triage | compare deterministic artifacts with thresholds |
+| Task receipt | record status, checks, evidence, and the next decision |
+| Hook boundary | enforce review before history-changing actions |
+| Handover | preserve durable stopping-point state for resumption |
+
+For readers who are not running the rehearsal, the frozen snapshots in
+[`docs/examples/preflight-001/`](docs/examples/preflight-001/) illustrate the
+end results of these stages. They are synthetic, non-authoritative reference
+material and are not copied into a runnable child workspace.
+
+The source fixture and the complete prompt sequence are documented in
+[`preflight/README.md`](preflight/README.md) and
+[`runbooks/10-skill-preflight.md`](runbooks/10-skill-preflight.md). Review the
+child diff and remove only the named child workspace when the rehearsal is
+over; keep the tracked placeholder.
+
+No command-line setup or test command is required from the participant. Ask
+Copilot to run the checks from within the child session:
+
+```text
+In the named demo-workspace child, use the preflight fixture and run its
+automated checks. Report the result without modifying the source checkout's
+TASKS.md or HANDOVER.md.
+```
+
+The complete sequence is in
+[`preflight/README.md`](preflight/README.md) and
+[`runbooks/10-skill-preflight.md`](runbooks/10-skill-preflight.md).
+
+Maintainers may run the repository's focused checks separately; those
+commands are not part of the participant rehearsal.
 
 ## Public-use rules
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -75,6 +76,22 @@ SECURITY_REJECTION_RULES = (
         r"(?i)\b(?:forward|relay|send)\s+(?:my|the|this)\s+(?:token|credential|api[_-]?key)\b"
     ), "high"),
 )
+
+
+def _resolve_repo(payload: dict[str, Any] | None = None) -> Path:
+    candidates: list[Path] = []
+    cwd = (payload or {}).get("cwd")
+    if isinstance(cwd, str) and cwd:
+        candidates.append(Path(cwd).resolve())
+    else:
+        candidates.append(Path(".").resolve())
+    candidates.append(REPO_ROOT)
+    for base in candidates:
+        probe = subprocess.run(["git", "-C", str(base), "rev-parse", "--show-toplevel"],
+                               capture_output=True, text=True, check=False)
+        if probe.returncode == 0 and probe.stdout.strip():
+            return Path(probe.stdout.strip())
+    return base
 
 
 def _security_finding(category: str, rule: str, severity: str) -> dict[str, str]:
@@ -152,7 +169,7 @@ def _command_from_args(tool_args: Any) -> str:
     return ""
 
 
-def decision_for_payload(payload: Any, *, repo: Path = REPO_ROOT) -> dict[str, str]:
+def decision_for_payload(payload: Any, *, repo: Path | None = None) -> dict[str, str]:
     """Return {} for normal permission flow or a deny decision."""
     if not isinstance(payload, dict):
         return {"permissionDecision": "deny",
@@ -176,9 +193,10 @@ def decision_for_payload(payload: Any, *, repo: Path = REPO_ROOT) -> dict[str, s
     if "fixtures/" in normalised and re.search(r"(?:>|>>|\b(?:tee|cp|mv|touch|rm)\b)", normalised, re.I):
         return {"permissionDecision": "deny",
                 "permissionDecisionReason": "Fixture writes require an explicit task scope."}
+    resolved_repo = repo or _resolve_repo(payload)
     for pattern, reason in DENY_RULES:
         if pattern.search(command):
-            if pattern is HISTORY_PATTERN and not task_receipt_ready(repo):
+            if pattern is HISTORY_PATTERN and not task_receipt_ready(resolved_repo):
                 reason = f"{reason} Update TASKS.md with the subtask receipt first."
             return {"permissionDecision": "deny", "permissionDecisionReason": reason}
     return {}

@@ -33,20 +33,38 @@ Use `/help` to inspect commands supported by the installed version. Start with
 this bounded prompt:
 
 ```text
-Read AGENTS.md, TASKS.md, README.md, and
-.github/skills/model-routing/SKILL.md. Return the approved task, its hash tags,
-role, acceptance checks, files in scope, and stopping point. Do not edit files.
+Read AGENTS.md, README.md, and the local TASKS.md if it exists; if it does not,
+create the local register during task setup. Then read
+.github/skills/model-routing/SKILL.md. Create or read the active TASK.md
+contract, return its task ID, role tag, acceptance checks, files in scope, and
+stopping point, and do not edit files yet.
 ```
 
-For a deterministic route preview, run:
+Then use the Copilot-native model-routing flow:
+
+```text
+Use the project model-routing skill. Run
+python3 .github/skills/model-routing/sync_runtime_models.py, read the generated
+models.runtime.json, present model and effort choices for implementation,
+planning, and review, save the confirmed assignments, then route TASK.md
+before any task work.
+```
+
+The skill calls `sync_runtime_models.py`, which writes
+`.github/skills/model-routing/models.raw.jsonl` and
+`.github/skills/model-routing/models.runtime.json`. It then calls
+`model_router.py` to write `models.assignments.json` and to emit the selected
+task route as JSON. These scripts do not start another agent session.
+Use the emitted model and effort to launch the bounded task through a separate
+process:
 
 ```bash
-python3 .github/skills/model-routing/model_router.py \
-  --task-id ROUTER-PLAN-001
+copilot --model <model_id> --effort <effort> -p '<task prompt>'
 ```
 
-The resolver reads the existing task register and emits JSON. It does not start
-another agent session or contact a provider.
+The selected model must perform the task and use its own Bash tool when needed.
+Record the launch command, session ID, usage, and tool telemetry when exposed;
+launch evidence is not provider execution attestation.
 
 ## Review every action
 

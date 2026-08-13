@@ -12,7 +12,8 @@ delivery to evidence and review.
 
 1. [`README.md`](../README.md) — adoption, outcomes, controls, and the demo;
 2. [`AGENTS.md`](../AGENTS.md) — repository working contract;
-3. [`TASKS.md`](../TASKS.md) — authoritative task register and router fixtures;
+3. local `TASKS.md` — ignored task register and router fixtures for the
+   current checkout;
 4. [`.github/skills/model-routing/SKILL.md`](../.github/skills/model-routing/SKILL.md)
    — task tags and route activation;
 5. [`docs/adoption-and-outcomes.md`](../docs/adoption-and-outcomes.md) —
@@ -39,8 +40,12 @@ under `.github/hooks/` consists of `session-state` for read-only context and
   effort deliberately;
 - [`08-publication-checks.md`](08-publication-checks.md) — review public
   claims, links, and complete diffs;
-- [`09-pi-fallback.md`](09-pi-fallback.md) — run and validate the Pi router
-  extension.
+- [`10-skill-preflight.md`](10-skill-preflight.md) — rehearse every skill and
+  hook safely before a supervised demonstration;
+- [`../docs/examples/preflight-001/`](../docs/examples/preflight-001/) —
+  frozen snapshots illustrating the preflight end state for readers;
+- The repository has no Pi extension or Pi fallback; the supported live
+  demonstration is the Copilot CLI path in `01-copilot-cli.md`.
 
 ## Safe default
 

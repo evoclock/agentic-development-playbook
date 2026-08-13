@@ -34,7 +34,6 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
   -s .github/hooks/tests -v
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
   -s .github/skills/model-routing/tests -v
-node --test .pi/extensions/model-router/logic.test.ts
 git diff --check
 ```
 
@@ -45,8 +44,8 @@ workflow PNG/SVG pair if diagrams changed.
 
 For every external claim, identify a public source, state version limits, and
 remove claims that cannot be verified. Do not imply Department for Education
-approval, adoption, or testing. State clearly whether validation used Pi,
-Copilot CLI, or a deterministic local check.
+approval, adoption, or testing. State clearly whether validation used Copilot
+CLI or a deterministic local check.
 
 ## Complete diff and approval
 

@@ -1,0 +1,11 @@
+{
+  "status": "WARNING",
+  "checks": [
+    {
+      "name": "evaluate.test_rows",
+      "observed": 20,
+      "threshold": 50,
+      "result": "WARN"
+    }
+  ]
+}

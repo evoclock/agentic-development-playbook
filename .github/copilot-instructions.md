@@ -6,7 +6,8 @@ of any one provider or CLI feature.
 
 ## Required workflow
 
-1. Read `AGENTS.md`, `README.md`, and the matching row in `TASKS.md`.
+1. Read `AGENTS.md`, `README.md`, and the matching row in the local
+   `TASKS.md`; if the ignored register is absent, create it during task setup.
 2. Read the relevant skill and runbook before acting.
 3. State the goal, files in scope, files unchanged, checks, and stopping point.
 4. Use the smallest suitable model, effort, tool set, and edit.
@@ -17,25 +18,20 @@ of any one provider or CLI feature.
 
 ## Model routing
 
-The root `TASKS.md` contains role-tagged router fixtures. Resolve a task
-without starting another session:
-
-```bash
-python3 .github/skills/model-routing/model_router.py \
-  --task-id ROUTER-PLAN-001
-```
-
-In Pi, configure and activate live assignments with:
+Create or read the active `TASK.md` contract first. Then ask Copilot:
 
 ```text
-/router
-/router show
-/router task ROUTER-PLAN-001
+Use the project model-routing skill. Run
+python3 .github/skills/model-routing/sync_runtime_models.py, read the generated
+models.runtime.json, present model and effort choices for implementation,
+planning, and review, save the confirmed assignments, then route TASK.md before
+any task work.
 ```
 
-`#implementer`, `#planner`, and `#reviewer` select implementation, planning,
-and review. Extra tags remain context. A live Copilot model-activation adapter
-is not claimed until it is validated against the installed CLI.
+The skill uses `#implementer`, `#planner`, and `#reviewer` to select
+implementation, planning, and review. Extra tags remain context. The router
+emits JSON and does not claim to activate a provider model outside the
+validated Copilot session.
 
 ## Skills and hooks
 

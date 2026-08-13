@@ -18,5 +18,14 @@ __pycache__/
 .env.*
 !.env.example
 
-# Generated synthetic pipeline evidence.
-synthetic-project/runs/
+# Local task register.
+/TASKS.md
+
+# Copilot model-routing session outputs.
+.github/skills/model-routing/models.raw.jsonl
+.github/skills/model-routing/models.runtime.json
+.github/skills/model-routing/models.assignments.json
+
+# Named disposable workspaces for the end-to-end preflight rehearsal.
+/demo-workspace/*
+!/demo-workspace/.gitkeep

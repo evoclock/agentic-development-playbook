@@ -23,6 +23,22 @@ Use this skill after one approved subtask reaches a stopping point.
 8. Invoke `/handover` after this update when the session state also needs to be
    recorded.
 
+## Copilot CLI procedure
+
+In Copilot CLI, invoke this project skill with natural language:
+
+> Use `task-list-update` for `TASK.md` task `<task-id>`. Record the approved
+> subtask, files changed, commands and checks, evidence, open questions, and
+> next decision in `TASKS.md`. Do not mark it complete unless the acceptance
+> evidence supports that status.
+
+The skill writes a dated receipt under the matching task in the local
+`TASKS.md` and returns the status, evidence, scope, and next decision.
+`TASK.md` remains the active contract; the ignored local `TASKS.md` remains
+the only task register. Create that register during task setup if it is
+absent. This procedure is Copilot CLI-native and does not depend on Pi slash
+commands.
+
 ## Required receipt
 
 ```text
@@ -38,7 +54,8 @@ Next decision: <human decision required>
 
 ## Boundaries
 
-- `TASKS.md` is the only task register for this public demo.
+- The local `TASKS.md` is the only task register for this public demo and is
+  intentionally not tracked.
 - Preserve the task source and acceptance criteria; do not rewrite them to make
   a result appear complete.
 - Do not invent test results, review approval, or publication approval.

@@ -47,9 +47,11 @@ class CopilotSessionStateTests(unittest.TestCase):
 
     def test_task_and_handover_state_are_reported(self):
         repo = self.fixture_repo()
+        (repo / "TASK.md").write_text("Task ID: DEMO\nRole tag: #reviewer\n", encoding="utf-8")
         (repo / "TASKS.md").write_text("| DEMO | task | `ready for review` |\n", encoding="utf-8")
         (repo / "HANDOVER.md").write_text("Status: current\n", encoding="utf-8")
         context = render_context(review_repo(repo))
+        self.assertIn("Task contract: present (TASK.md)", context)
         self.assertIn("Task register: present (TASKS.md)", context)
         self.assertIn("Handover: present (HANDOVER.md)", context)
         self.assertIn("Receipt sequence: /task-list-update then /handover", context)

@@ -1,0 +1,6 @@
+{
+  "run_id": "preflight-warning",
+  "generator": "preflight evidence fixture",
+  "source_revision": "fixture-v1",
+  "deterministic": true
+}

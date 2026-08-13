@@ -1,14 +1,15 @@
 ---
 name: model-routing
-description: Route task-tagged implementation, planning, and review work through Pi or a deterministic Copilot-compatible resolver.
+description: Route task-tagged implementation, planning, and review work through GitHub Copilot CLI.
 ---
 
 # Model routing demo
 
 Use this skill for the real model-router demonstration. The authoritative task
-metadata is in the repository-root `TASKS.md`. The router reads hash tags from
-the matching task row; it does not create a task board, routing ledger, or
-second evidence store.
+metadata is in the local `TASKS.md` for the current checkout. It is ignored by
+Git and must be created during task setup when absent. The router reads hash
+tags from the matching task row; it does not create a task board, routing
+ledger, or second evidence store.
 
 ## Role tags
 
@@ -37,60 +38,53 @@ ROUTER-REVIEW-002     #reviewer
 ROUTER-REVIEW-003     #reviewer
 ```
 
-## Pi session procedure
+## Copilot CLI procedure
 
-Start Pi from the repository root. Trust the project-local extension when Pi
-asks, then use `/router`:
+In Copilot CLI, do not use the Python script's `input()` prompts: tool
+execution does not provide interactive stdin. Instead, when this skill is
+invoked, refresh the runtime roster, present compatible models and efforts
+with Copilot's user-choice interaction, then call the resolver with the
+selected values:
 
-```text
-/router
-```
+1. Run `sync_runtime_models.py`.
+2. Read `models.runtime.json`.
+3. Ask the user to choose a model and effort for implementation, planning, and
+   review independently.
+4. Resolve and save each choice with `--role`, `--model`, `--effort`, and
+   `--save-assignment`.
+5. Read the active `TASK.md` contract and resolve it with `--task-file TASK.md`.
+6. Execute the task through a new model-bound Copilot process using the
+   emitted model and effort:
 
-The command opens six selectors: a model and effort for each role. The model
-options come from Pi's actual authenticated catalogue. They are not read from
-the public dry-run roster.
+   ```bash
+   copilot --model <model_id> --effort <effort> -p '<task prompt>'
+   ```
 
-Inspect assignments:
+   The task prompt must tell that selected model to perform the bounded work,
+   use its own Bash tool when needed, and record public-safe execution
+   evidence. The caller must capture the CLI session identifier and usage
+   output when exposed. This is launch evidence; provider execution remains
+   unattested unless the CLI explicitly attests it.
 
-```text
-/router show
-```
+The Python interactive mode remains for a real terminal with connected stdin;
+it is not the Copilot-session interaction path.
 
-Activate a configured role:
+The Copilot onboarding prompt is:
 
-```text
-/router use implementation
-/router use planning
-/router use review
-```
-
-Activate a task route from the existing register:
-
-```text
-/router task ROUTER-IMPLEMENT-001
-/router task ROUTER-PLAN-001
-/router task ROUTER-REVIEW-001
-```
-
-`/router task <task-id>` reads `TASKS.md`, extracts the row's hash tags, maps
-the first role tag through `models.json`, activates that role's selected model
-and effort, and stores the active task in the current Pi session. Optional
-command-line tags remain only as a compatibility/testing fallback when a row
-has no routing tag.
-
-The next agent turn receives the active task, role, tags, model, and effort as
-routing context. The command itself does not start a provider request.
-
-## Copilot-compatible resolver
+> Use the project `model-routing` skill. Run
+> `python3 .github/skills/model-routing/sync_runtime_models.py`, read
+> `models.runtime.json`, present compatible model and effort choices for each
+> role, save the confirmed assignments, then read `TASK.md` and route it before
+> any task work.
 
 Resolve the same task metadata without starting a provider:
 
 ```bash
 python3 .github/skills/model-routing/model_router.py \
-  --task-id ROUTER-REVIEW-001
+  --task-file TASK.md
 ```
 
-Inspect the public dry-run roster:
+Inspect the fallback roster:
 
 ```bash
 python3 .github/skills/model-routing/model_router.py --list
@@ -104,43 +98,51 @@ python3 .github/skills/model-routing/model_router.py \
   --role implementation --model local-coding --effort medium
 ```
 
-The resolver emits JSON containing the task ID, normalized tags, matched tag,
-role, model label, provider label, effort, selection mode, and reason. It is
-safe to call from a Copilot workflow because it reads local configuration only.
-It does not claim to change the active Copilot model; that adapter must be
-validated separately.
+Persist a selected role assignment for subsequent task routing:
+
+```bash
+python3 .github/skills/model-routing/model_router.py \
+  --role implementation --model local-coding --effort medium \
+  --save-assignment
+```
+
+The resolver emits JSON containing the task ID, task source, normalized tags,
+matched tag, role, model label, provider label, effort, selection mode, reason,
+and a model-bound execution template. It validates and records routing state;
+the caller must use that template to launch the selected Copilot process.
 
 ## Configuration boundaries
 
-- `.github/skills/model-routing/models.json` maps tags to roles and contains a
-  public, provider-free roster for deterministic checks;
-- Pi's `/router` uses `ctx.modelRegistry.getAvailable()` for real choices;
-- task metadata belongs in the existing root `TASKS.md`;
-- role assignments belong in the current Pi session;
+- `.github/skills/model-routing/models.json` is the public fallback roster;
+- `.github/skills/model-routing/models.runtime.json` is the Copilot session
+  roster snapshot;
+- `.github/skills/model-routing/models.assignments.json` is session routing
+  state and must not contain credentials;
+- local `TASKS.md` is the authoritative register and `TASK.md` is the active
+  task contract;
 - model labels and cost tiers do not prove authentication or provider access.
 
 Do not add credentials, private endpoints, or a second task/evidence store.
 
 ## Validation
 
-Run the focused resolver and Pi logic tests:
+Run the focused resolver tests:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
   -s .github/skills/model-routing/tests -v
-node --test .pi/extensions/model-router/logic.test.ts
 ```
-
-After changing `.pi/extensions/model-router.ts`, restart Pi or run `/reload`.
-Plain project discovery must register `/router` without attempting to load the
-nested helper, test, or declaration files as separate extensions.
 
 ## Procedure and stop rules
 
 1. Read the task contract and the matching `TASKS.md` row.
 2. Confirm the row contains exactly one role tag or resolve a recorded conflict.
-3. Configure implementation, planning, and review independently in Pi.
-4. Use `/router task <task-id>` to activate the task's role route.
-5. Record the route and checks in the existing task receipt when it affects
-   implementation or review.
-6. Stop at the approved task boundary; routing must not select new work.
+3. Configure implementation, planning, and review independently through
+   Copilot user interaction.
+4. Read `TASK.md` and route it with the saved assignment.
+5. Launch the bounded task with the selected model and effort through
+   `copilot --model ... --effort ... -p ...`.
+6. Record the route, launch evidence, checks, and any exposed session
+   telemetry in the existing task receipt when it affects implementation or
+   review.
+7. Stop at the approved task boundary; routing must not select new work.

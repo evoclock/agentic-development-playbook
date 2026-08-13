@@ -1,0 +1,11 @@
+{
+  "status": "HEALTHY",
+  "checks": [
+    {
+      "name": "evaluate.test_rows",
+      "observed": 100,
+      "threshold": 50,
+      "result": "PASS"
+    }
+  ]
+}

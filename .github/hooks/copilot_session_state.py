@@ -8,10 +8,26 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-TASK_PATH = "TASKS.md"
+TASK_PATH = "TASK.md"
 TASK_REGISTER_PATH = "TASKS.md"
 HANDOVER_PATH = "HANDOVER.md"
 TEST_COMMAND = "python3 -m unittest discover -s .github/skills/model-routing/tests -v"
+
+
+def _resolve_repo(payload: dict[str, Any] | None = None) -> Path:
+    candidates: list[Path] = []
+    cwd = (payload or {}).get("cwd")
+    if isinstance(cwd, str) and cwd:
+        candidates.append(Path(cwd).resolve())
+    else:
+        candidates.append(Path(".").resolve())
+    candidates.append(REPO_ROOT)
+    for base in candidates:
+        probe = subprocess.run(["git", "-C", str(base), "rev-parse", "--show-toplevel"],
+                               capture_output=True, text=True, check=False)
+        if probe.returncode == 0 and probe.stdout.strip():
+            return Path(probe.stdout.strip())
+    return base
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -39,7 +55,7 @@ def _document_state(repo: Path, relative_path: str) -> dict[str, str]:
     return {"path": relative_path, "status": "present", "marker": marker}
 
 
-def review_repo(repo: Path = REPO_ROOT) -> dict[str, Any]:
+def review_repo(repo: Path) -> dict[str, Any]:
     """Read branch, task, handover, and working-tree state without writing."""
     status_lines = [line for line in _git(repo, "status", "--short").splitlines() if line]
     return {
@@ -47,6 +63,7 @@ def review_repo(repo: Path = REPO_ROOT) -> dict[str, Any]:
         "head": _git(repo, "rev-parse", "--short", "HEAD"),
         "status": status_lines,
         "diff_stat": _git(repo, "diff", "--stat") or "(clean)",
+        "task_contract": _document_state(repo, TASK_PATH),
         "task_register": _document_state(repo, TASK_REGISTER_PATH),
         "handover": _document_state(repo, HANDOVER_PATH),
     }
@@ -61,6 +78,7 @@ def render_context(state: dict[str, Any], payload: dict[str, Any] | None = None)
         f"Branch: {state['branch']} @ {state['head']}",
         f"Working tree: {'clean' if not state['status'] else 'review required'}",
         f"Task source: {TASK_PATH}",
+        f"Task contract: {state['task_contract']['status']} ({TASK_PATH})",
         f"Task register: {state['task_register']['status']} ({TASK_REGISTER_PATH})",
         f"Handover: {state['handover']['status']} ({HANDOVER_PATH})",
         "Receipt sequence: /task-list-update then /handover at a subtask stop.",
@@ -78,10 +96,10 @@ def render_context(state: dict[str, Any], payload: dict[str, Any] | None = None)
     return "\n".join(lines)
 
 
-def hook_output(payload: dict[str, Any] | None = None, *, repo: Path = REPO_ROOT) -> dict[str, str]:
+def hook_output(payload: dict[str, Any] | None = None, *, repo: Path | None = None) -> dict[str, str]:
     """Return the native Copilot sessionStart output shape."""
     try:
-        state = review_repo(repo)
+        state = review_repo(repo or _resolve_repo(payload))
         return {"additionalContext": render_context(state, payload)}
     except (OSError, RuntimeError, ValueError) as exc:
         return {"additionalContext": f"SESSION STATE REVIEW ERROR: {exc}. Review the repository manually."}

@@ -23,9 +23,10 @@ evidence and review.
 
 The model router is one concrete implementation of the method. It separates
 implementation, planning, and review assignments, reads task role tags from the
-existing `TASKS.md`, and keeps the active assignment in the current Pi session.
-The surrounding skills and hooks make the larger process repeatable and
-bounded; the router alone is not a governance system.
+local `TASKS.md`, and keeps session-local assignments in an ignored runtime
+file. The task register is intentionally local-only. The surrounding skills
+and hooks make the larger process repeatable and bounded; the router alone is
+not a governance system.
 
 ## What to measure
 

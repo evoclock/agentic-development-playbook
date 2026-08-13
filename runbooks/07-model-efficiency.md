@@ -24,27 +24,23 @@ reviewing a diff, and identifying uncertainty.
 | `planning` | ambiguity, decomposition, and trade-offs | plan and decisions |
 | `review` | independent evidence, scope, and risk review | findings and receipt |
 
-Configure them independently in Pi:
+### Copilot CLI configuration
 
-```text
-/router
-/router show
-```
+In Copilot CLI, ask the project skill:
 
-The TUI uses Pi's actual authenticated model catalogue. It does not use the
-public placeholder roster to pretend a provider is installed.
+> Sync the Copilot model roster, show all compatible models and effort levels,
+> ask me to choose implementation, planning, and review assignments, save the
+> choices, and route the active `TASK.md` contract.
 
-Activate one configured route:
-
-```text
-/router use implementation
-/router use planning
-/router use review
-```
+The Copilot path uses `sync_runtime_models.py`,
+`model_router.py --save-assignment`, and `model_router.py --task-file TASK.md`.
+Do not use the Python `--interactive` flag through a Copilot tool call; it
+requires terminal stdin.
 
 ## Task routing
 
-The root `TASKS.md` owns task metadata. Role tags map as follows:
+The local `TASKS.md` owns task metadata for the current checkout. Create the
+ignored register during task setup if it is absent. Role tags map as follows:
 
 | Tag | Role |
 |---|---|
@@ -52,18 +48,17 @@ The root `TASKS.md` owns task metadata. Role tags map as follows:
 | `#planner` | planning |
 | `#reviewer` | review |
 
-Additional tags remain context. Activate a tagged task without repeating its
-role tag:
+Additional tags remain context. Activate the tagged task from the active
+contract:
 
-```text
-/router task ROUTER-IMPLEMENT-001
-/router task ROUTER-PLAN-001
-/router task ROUTER-REVIEW-001
+```bash
+python3 .github/skills/model-routing/model_router.py \
+  --task-file TASK.md
 ```
 
-The route is stored in the current Pi session and added to the next agent
-context. It does not create a task board or start a provider request. A
-conflicting explicit tag is rejected.
+The route is stored in ignored session state and emitted as JSON. It does not
+create a task board or start a provider request. A conflicting explicit tag is
+rejected.
 
 For a provider-free Copilot-compatible preview:
 

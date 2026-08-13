@@ -21,6 +21,20 @@ security check, or other approved evidence-producing command.
 7. Run focused tests, then the authorized wider suite when code changes are
    complete.
 
+## Copilot CLI procedure
+
+When validation, metrics, warnings, failures, or promotion evidence is part of
+the active `TASK.md`, ask Copilot:
+
+> Use `pipeline-run-triage` for `<task-id>`. Read the relevant runbook and
+> approved artifacts, run only the focused authorized checks, compare observed
+> values with every threshold, and return the required status, evidence,
+> action, scope, and open questions. Do not edit generated evidence.
+
+The skill returns `HEALTHY`, `WARNING`, `FAILED`, or `REVIEW_REQUIRED` with
+artifact-backed evidence. It does not publish, promote, or replace human
+approval. This is the Copilot CLI procedure; no Pi command is implied.
+
 ## Output format
 
 ```text

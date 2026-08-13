@@ -1,13 +1,14 @@
 # Project instructions
 
 This repository is a public playbook for governed agentic-AI development. It
-explains adoption, rollout, evidence, controls, and a live role-based Pi model
-router.
+explains adoption, rollout, evidence, controls, and a live role-based
+Copilot CLI model router.
 
 ## Start here
 
 1. Read `README.md`.
-2. Read `TASKS.md` and the matching task row.
+2. Read the local `TASKS.md` and matching task row; if it is absent, create
+   the local register as part of the approved task setup before routing.
 3. Read the relevant skill under `.github/skills/`.
 4. Read the relevant runbook and workflow diagram.
 5. Inspect Git status before editing.
@@ -29,7 +30,7 @@ From the repository root:
 ```text
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s .github/hooks/tests -v
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s .github/skills/model-routing/tests -v
-node --test .pi/extensions/model-router/logic.test.ts
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s preflight/tests -v
 ```
 
 Use the task-specific runbook for any additional deterministic checks. Do not
@@ -45,6 +46,6 @@ edit generated or external evidence to make a check pass.
 - Do not commit or push without explicit human approval.
 - Keep the agent session supervised.
 
-Project-specific Copilot instructions and hooks are under `.github/`.
-A Pi session must load the relevant skill explicitly and must not assume that
-Copilot hooks, provider integrations, or MCP registration are active.
+Project-specific Copilot instructions, skills, and hooks are under `.github/`.
+The repository does not include a Pi implementation; provider availability and
+Copilot model activation remain target-CLI concerns.
